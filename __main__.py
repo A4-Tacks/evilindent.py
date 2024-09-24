@@ -33,7 +33,7 @@ FILE:
     -                   input from stdin
 """
 
-version = "0.2.0"
+version = "0.2.1"
 
 bak: Optional[str] = None
 max_indent: int = 7
@@ -135,14 +135,13 @@ def run_file(file, out_file) -> None:
     for line in file:
         indent, solid = get_indent(line)
 
-        if indent or solid:
+        if indent or solid not in ("\r\n", "\n", "", "\r"):
             if indent+1 > len(indent_map):
                 new_indent = (len(indent_map[prev_indent])
                               + randrange(max_indent) + 1)
                 set_list(indent_map, indent, make_indent(new_indent))
 
-            if indent:
-                indent_map[indent+1:] = ()
+            indent_map[indent+1:] = ()
 
             prev_indent = indent
         print(indent_map[indent], end=solid, file=out_file)
