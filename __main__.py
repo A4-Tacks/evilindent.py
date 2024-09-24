@@ -21,18 +21,25 @@ Option:
     -i, --in-place      edit files in place
     -b, --backup=<SUFFIX>
                         in place and makes backup
+    -m, --max-indent=<NUM>
+                        max indent spaces
     -h, --help          show this help
     -v, --version       show version
+
+FILE:
+    -                   input from stdin
 """
 
 version = "0.1.0"
 
 bak: Optional[str] = None
+max_indent: int = 7
 
 try:
-    optlist, files = getopt(argv[1:], "ib:hv", longopts=[
+    optlist, files = getopt(argv[1:], "ib:m:hv", longopts=[
         "in-place",
         "bak",
+        "max-indent",
         "help",
         "version",
     ])
@@ -46,6 +53,14 @@ for opt, arg in optlist:
             bak = ""
         case "-b" | "--backup":
             bak = arg
+        case "-m" | "--max-indent":
+            try:
+                max_indent = int(arg)
+                if max_indent <= 0:
+                    raise ValueError(f"expect NUM > 0, found: {max_indent}")
+            except ValueError as e:
+                print("Error:", f"on {opt}", e)
+                exit(2)
         case "-h" | "--help":
             print(end=help_msg)
             exit()
@@ -112,10 +127,11 @@ def run_file(file, out_file) -> None:
         if indent or solid:
             if indent+1 > len(indent_map):
                 new_indent = (len(indent_map[prev_indent])
-                              + randrange(7) + 1)
+                              + randrange(max_indent) + 1)
                 set_list(indent_map, indent, " " * new_indent)
 
-            indent_map[indent+1:] = ()
+            if indent:
+                indent_map[indent+1:] = ()
 
             prev_indent = indent
         print(indent_map[indent], end=solid, file=out_file)
