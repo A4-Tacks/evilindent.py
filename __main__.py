@@ -9,7 +9,7 @@ import os.path
 from getopt import getopt, GetoptError
 from shlex import quote
 from typing import Optional
-from sys import argv, stdout, stderr
+from sys import argv, stdin, stdout, stderr
 from random import randrange
 
 
@@ -69,10 +69,27 @@ def get_indent(line: str) -> tuple[int, str]:
     return len(line) - len(solid), solid
 
 
+def check_path(path: str) -> None:
+    if bak is None and path == "-":
+        return
+
+    if not os.path.exists(path):
+        print("Error:", f"{quote(path)} file does not exists", file=stderr)
+        exit(2)
+
+    if not os.path.isfile(path):
+        print("Error:", f"{quote(path)} is not a file", file=stderr)
+        exit(2)
+
+
+
 def with_out_file(path: str, f):
     if bak is None:
-        with open(path) as file:
-            f(file, stdout)
+        if path == "-":
+            f(stdin, stdout)
+        else:
+            with open(path) as file:
+                f(file, stdout)
         return
 
     assert isinstance(bak, str), f"{type(bak)=!r}, {bak=!r}"
@@ -92,10 +109,10 @@ def run_file(file, out_file) -> None:
     for line in file:
         indent, solid = get_indent(line)
 
-        if indent:
+        if indent or solid:
             if indent+1 > len(indent_map):
                 new_indent = (len(indent_map[prev_indent])
-                              + randrange(6) + 1)
+                              + randrange(7) + 1)
                 set_list(indent_map, indent, " " * new_indent)
 
             indent_map[indent+1:] = ()
@@ -105,12 +122,5 @@ def run_file(file, out_file) -> None:
 
 
 for path in files:
-    if not os.path.exists(path):
-        print("Error:", f"{quote(path)} file does not exists", file=stderr)
-        exit(2)
-
-    if not os.path.isfile(path):
-        print("Error:", f"{quote(path)} is not a file", file=stderr)
-        exit(2)
-
+    check_path(path)
     with_out_file(path, run_file)
