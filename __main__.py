@@ -11,11 +11,13 @@ from shlex import quote
 from typing import Optional
 from sys import argv, stdin, stdout, stderr
 from random import randrange
+from functools import cache
 
 
 help_msg = """\
 Usage: evilindent [Option...] [FILE...]
 Randomly indent block
+Warning: This may damage multiple lines string, etc
 
 Option:
     -i, --in-place      edit files in place
@@ -23,6 +25,7 @@ Option:
                         in place and makes backup
     -m, --max-indent=<NUM>
                         max indent spaces
+    -t, --tab           use tab indent
     -h, --help          show this help
     -v, --version       show version
 
@@ -30,16 +33,18 @@ FILE:
     -                   input from stdin
 """
 
-version = "0.1.0"
+version = "0.2.0"
 
 bak: Optional[str] = None
 max_indent: int = 7
+indent_char: str = " "
 
 try:
-    optlist, files = getopt(argv[1:], "ib:m:hv", longopts=[
+    optlist, files = getopt(argv[1:], "ib:m:thv", longopts=[
         "in-place",
         "bak",
         "max-indent",
+        "tab",
         "help",
         "version",
     ])
@@ -61,6 +66,8 @@ for opt, arg in optlist:
             except ValueError as e:
                 print("Error:", f"on {opt}", e)
                 exit(2)
+        case "-t" | "--tab":
+            indent_char = "\t"
         case "-h" | "--help":
             print(end=help_msg)
             exit()
@@ -84,6 +91,11 @@ def get_indent(line: str) -> tuple[int, str]:
     return len(line) - len(solid), solid
 
 
+@cache
+def make_indent(level: int) -> str:
+    return indent_char * level
+
+
 def check_path(path: str) -> None:
     if bak is None and path == "-":
         return
@@ -95,7 +107,6 @@ def check_path(path: str) -> None:
     if not os.path.isfile(path):
         print("Error:", f"{quote(path)} is not a file", file=stderr)
         exit(2)
-
 
 
 def with_out_file(path: str, f):
@@ -128,7 +139,7 @@ def run_file(file, out_file) -> None:
             if indent+1 > len(indent_map):
                 new_indent = (len(indent_map[prev_indent])
                               + randrange(max_indent) + 1)
-                set_list(indent_map, indent, " " * new_indent)
+                set_list(indent_map, indent, make_indent(new_indent))
 
             if indent:
                 indent_map[indent+1:] = ()

@@ -25,6 +25,23 @@ def run_file(file, out_file) -> None:
 ```
 
 ```python
+$ python evilindent.py -h
+Usage: evilindent [Option...] [FILE...]
+Randomly indent block
+Warning: This may damage multiple lines string, etc
+
+Option:
+    -i, --in-place      edit files in place
+    -b, --backup=<SUFFIX>
+                        in place and makes backup
+    -m, --max-indent=<NUM>
+                        max indent spaces
+    -t, --tab           use tab indent
+    -h, --help          show this help
+    -v, --version       show version
+
+FILE:
+    -                   input from stdin
 $ python evilindent.py test.py
 def run_file(file, out_file) -> None:
    prev_indent = 0
