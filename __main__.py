@@ -33,7 +33,7 @@ FILE:
     -                   input from stdin
 """
 
-version = "0.2.1"
+version = "0.2.2"
 
 bak: Optional[str] = None
 max_indent: int = 7
@@ -42,8 +42,8 @@ indent_char: str = " "
 try:
     optlist, files = getopt(argv[1:], "ib:m:thv", longopts=[
         "in-place",
-        "bak",
-        "max-indent",
+        "bak=",
+        "max-indent=",
         "tab",
         "help",
         "version",
